@@ -1,0 +1,79 @@
+@extends('layouts.app')
+
+@section('title')
+    Second CA - {{$upload->term->name}}
+@endsection
+
+@section('breadcrumb')
+
+@endsection
+
+@section('content')
+<div class="progress" style="height: 40px; font-size:20px;">
+    @php
+    $level = $upload->level;
+    $percentage = ($level / 3) * 100;
+    @endphp
+    <div class="progress-bar" role="progressbar" style="width: {{$percentage}}%;" aria-valuenow="{{$percentage}}" aria-valuemin="0" aria-valuemax="100">{{$percentage}}%</div>
+</div>
+<p class="mt-2">Uploaded: {{$level}} / 3</p> 
+<!-- display form use table to restructure its content of name and input  to insert the firts ca of the student of each student available in the class -->
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <div class="alert alert-info text-center">Enter Second CA Scores for {{$upload->sectionClassSubjectTeacher->sectionClassSubject->sectionClass->name}} - {{$upload->sectionClassSubjectTeacher->sectionClassSubject->subject->name}} for {{$upload->term->name}}</div>
+            <form action="{{route('teacher.subject.exam.store',[$upload->id])}}" method="post">
+                @csrf
+                <table class="table table-sm ">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>STUDENT NAME</th>
+                            <th>ADMISSION NO</th>
+                            <th>FIRST CA</th>
+                            <th>SECOND CA</th>
+                            <th>EXAM</th>
+                            <th>TOTAL</th>
+                            <th>GRADE</th>
+                            <th>POSITION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($upload->sectionClassSubjectTeacher->sectionClassSubject->sectionClass->updateAndGetAllActiveStudentResultForThisTerms($upload->id) as $studentResult)
+                        @php 
+                        $sectionClassStudent = $studentResult[0]->sectionClassStudentTerm->sectionClassStudent;
+                        @endphp
+                        <tr>
+                            <td>{{$loop->iteration}}</td>
+                            <td>{{$sectionClassStudent->student->name}}</td>
+                            <td>{{$sectionClassStudent->student->admission_no}}</td>
+                            <td>{{$studentResult[0]->first_ca}}</td>
+                            <td>{{$studentResult[0]->second_ca}}</td>
+                            <td>
+                                @if($upload->status == 0)
+                                <input type="number" step="any" name="scores[{{$studentResult[0]->id}}]" class="form-control" max="60" value="{{$studentResult[0]->exam}}">
+                                @else
+                                {{$studentResult[0]->exam}}
+                                @endif
+                            </td>
+                            <td>{{$studentResult[0]->total}}</td>
+                            <td>{{$studentResult[0]->grade}}</td>
+                            <td>{{$studentResult[0]->subjectTeacherTermlyUpload->position($studentResult[0]->total) ?? ''}}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div class="form-group">
+                    
+                    <a class="mb-4 btn btn-outline-warning" href="{{route('teacher.subject.firstca.index',[$upload->id])}}">Goto First CA</a> 
+                    <a class="mb-4 btn btn-outline-danger" href="{{route('teacher.subject.secondca.index',[$upload->id])}}"> Goto Second CA</a> 
+                    @if($upload->status == 0)
+                    <button class=" mb-4 btn btn-primary">Save Exam Score</button> 
+                    <a class="mb-4 btn btn-outline-info" href="{{route('teacher.subject.exam.submit',[$upload->id])}}"> Submit Result to Class Master</a> 
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
